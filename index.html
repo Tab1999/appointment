@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Appointment Booking App</title>
+</head>
+
+<body>
+    <h1>Appointment Booking App</h1>
+
+    <form id="userForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <label for="phone">Phone Number:</label>
+        <input type="tel" id="phone" name="phone" required><br><br>
+
+        <input type="button" value="Submit" id="submitBtn">
+    </form>
+
+    <h2>Users:</h2>
+    <ul id="userList"></ul>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"></script> 
+    <script>
+        // Function to handle form submission
+        function saveToLocalStorage() {
+            const nameInput = document.getElementById("name");
+            const emailInput = document.getElementById("email");
+            const phoneInput = document.getElementById("phone");
+
+            const name = nameInput.value;
+            const email = emailInput.value;
+            const phone = phoneInput.value;
+
+            if (name && email && phone) {
+                const userData = {
+                    name: name,
+                    email: email,
+                    phone: phone
+                };
+
+                // Retrieve existing users from local storage
+                // let users = JSON.parse(localStorage.getItem('users')) || [];
+                // users.push(userData);
+                 axios.post('https://crudcrud.com/api/18ef1dbe00d9411e850029d6d76de6c6/appointmentdata', userData)
+                    .then((response) => {
+                        showUsersOnScreen(response.data);
+                        console.log(response);
+                    })
+                    .catch((err) => {
+                        document.body.innerHTML = document.body.innerHTML + "<h4> something went wrong </h4>"
+                        console.log(err);
+                    })
+
+                    
+
+                // Save the updated user list to local storage
+                // localStorage.setItem('users', JSON.stringify(users));
+
+                // Clear input fields
+                nameInput.value = '';
+                emailInput.value = '';
+                phoneInput.value = '';
+
+                // Update the user list on the screen
+                // showUsersOnScreen();
+
+                alert('User data saved.');
+            } else {
+                alert('Please fill in all fields.');
+            }
+        }
+
+        // Function to display users on the screen
+        function showUsersOnScreen() {
+           
+            const userList = document.getElementById("userList");
+            userList.innerHTML = '';
+
+            axios.get("https://crudcrud.com/api/18ef1dbe00d9411e850029d6d76de6c6/appointmentdata")
+                .then((response) => {
+                    console.log(response);
+                    const users = response.data;
+                    users.forEach((user, index) => {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `
+                            <strong>Name:</strong> ${user.name}<br>
+                            <strong>Email:</strong> ${user.email}<br>
+                            <strong>Phone:</strong> ${user.phone}<br>
+                            <button onclick="editUser('${user._id}')">Edit</button>
+                            <button onclick="deleteUser('${user._id}')">Delete</button>
+                        `;
+                        userList.appendChild(listItem);
+                    });
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        }
+
+        // Function to edit a user
+        function editUser(index) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const userToEdit = users[index];
+
+            // Fill the form with user data for editing
+            document.getElementById("name").value = userToEdit.name;
+            document.getElementById("email").value = userToEdit.email;
+            document.getElementById("phone").value = userToEdit.phone;
+
+            // Remove the edited user from the list
+            users.splice(index, 1);
+
+            // Update the user list on the screen
+            showUsersOnScreen();
+
+            // Update the local storage with the edited user list
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // Function to delete a user
+        function deleteUser(userId) {
+            
+             axios.delete(`https://crudcrud.com/api/18ef1dbe00d9411e850029d6d76de6c6/appointmentdata/${userId}`)
+                .then((response) => {
+                    showUsersOnScreen();
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        }
+
+        // Attach the saveToLocalStorage function to the submit button's click event
+        document.getElementById("submitBtn").addEventListener("click", saveToLocalStorage);
+
+        // Call showUsersOnScreen initially to display any existing user data
+        showUsersOnScreen();
+    </script>
+</body>
+
+</html>
