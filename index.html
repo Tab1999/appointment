@@ -9,6 +9,9 @@
     <h1>Appointment Booking App</h1>
 
     <form id="userForm">
+        <!-- <label for= "userId">User ID:</label> -->
+        <input type="hidden" id="userId" name="userId">
+
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required><br><br>
 
@@ -28,6 +31,7 @@
     <script>
         // Function to handle form submission
         function saveToLocalStorage() {
+            const userIdInput = document.getElementById("userId");
             const nameInput = document.getElementById("name");
             const emailInput = document.getElementById("email");
             const phoneInput = document.getElementById("phone");
@@ -35,6 +39,7 @@
             const name = nameInput.value;
             const email = emailInput.value;
             const phone = phoneInput.value;
+            const userId = userIdInput.value;
 
             if (name && email && phone) {
                 const userData = {
@@ -46,7 +51,27 @@
                 // Retrieve existing users from local storage
                 // let users = JSON.parse(localStorage.getItem('users')) || [];
                 // users.push(userData);
-                 axios.post('https://crudcrud.com/api/18ef1dbe00d9411e850029d6d76de6c6/appointmentdata', userData)
+                 if (userId) {
+                    // Update existing user data
+                    axios.put(`https://crudcrud.com/api/18ef1dbe00d9411e850029d6d76de6c6/appointmentdata/${userId}`, userData)
+                        .then((response) => {
+                            showUsersOnScreen();
+                            console.log(response);
+                        })
+                        .catch((err) => {
+                            document.body.innerHTML = document.body.innerHTML + "<h4>Something went wrong</h4>"
+                            console.log(err);
+                        });
+
+                    // Clear input fields and userId
+                    userIdInput.value = '';
+                    nameInput.value = '';
+                    emailInput.value = '';
+                    phoneInput.value = '';
+                   
+                }
+                 else{
+                    axios.post('https://crudcrud.com/api/18ef1dbe00d9411e850029d6d76de6c6/appointmentdata', userData)
                     .then((response) => {
                         showUsersOnScreen(response.data);
                         console.log(response);
@@ -55,27 +80,21 @@
                         document.body.innerHTML = document.body.innerHTML + "<h4> something went wrong </h4>"
                         console.log(err);
                     })
+                
 
                     
 
-                // Save the updated user list to local storage
-                // localStorage.setItem('users', JSON.stringify(users));
-
-                // Clear input fields
                 nameInput.value = '';
                 emailInput.value = '';
                 phoneInput.value = '';
-
-                // Update the user list on the screen
-                // showUsersOnScreen();
-
-                alert('User data saved.');
+                 }
+              
             } else {
                 alert('Please fill in all fields.');
             }
         }
 
-        // Function to display users on the screen
+       
         function showUsersOnScreen() {
            
             const userList = document.getElementById("userList");
@@ -91,7 +110,7 @@
                             <strong>Name:</strong> ${user.name}<br>
                             <strong>Email:</strong> ${user.email}<br>
                             <strong>Phone:</strong> ${user.phone}<br>
-                            <button onclick="editUser('${user._id}')">Edit</button>
+                            <button onclick="editUser('${user._id}', '${user.name}', '${user.email}', '${user.phone}')">Edit</button>
                             <button onclick="deleteUser('${user._id}')">Delete</button>
                         `;
                         userList.appendChild(listItem);
@@ -102,27 +121,20 @@
                 });
         }
 
-        // Function to edit a user
-        function editUser(index) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const userToEdit = users[index];
+       
+        function editUser(userId, name, email, phone) {
+             const nameInput = document.getElementById("name");
+            const emailInput = document.getElementById("email");
+            const phoneInput = document.getElementById("phone");
+            const userIdInput = document.getElementById("userId");
 
-            // Fill the form with user data for editing
-            document.getElementById("name").value = userToEdit.name;
-            document.getElementById("email").value = userToEdit.email;
-            document.getElementById("phone").value = userToEdit.phone;
-
-            // Remove the edited user from the list
-            users.splice(index, 1);
-
-            // Update the user list on the screen
-            showUsersOnScreen();
-
-            // Update the local storage with the edited user list
-            localStorage.setItem('users', JSON.stringify(users));
+            nameInput.value = name;
+            emailInput.value = email;
+            phoneInput.value = phone;
+            userIdInput.value = userId;
         }
 
-        // Function to delete a user
+       
         function deleteUser(userId) {
             
              axios.delete(`https://crudcrud.com/api/18ef1dbe00d9411e850029d6d76de6c6/appointmentdata/${userId}`)
@@ -134,10 +146,10 @@
                 });
         }
 
-        // Attach the saveToLocalStorage function to the submit button's click event
+        
         document.getElementById("submitBtn").addEventListener("click", saveToLocalStorage);
 
-        // Call showUsersOnScreen initially to display any existing user data
+       
         showUsersOnScreen();
     </script>
 </body>
